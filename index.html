@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Babylon Cube Drop</title>
+  <style>
+    html, body { margin: 0; overflow: hidden; height: 100%; }
+    canvas { width: 100%; height: 100%; display: block; }
+    #overlay {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      z-index: 10;
+    }
+    #overlay img {
+      width: 100px;
+      height: auto;
+    }
+  </style>
+</head>
+<body>
+  <!-- 좌상단 이미지 -->
+  <div id="overlay">
+    <img src="girl.png" alt="Girl">
+  </div>
+
+  <!-- Babylon.js Canvas -->
+  <canvas id="renderCanvas"></canvas>
+
+  <!-- Babylon.js & Cannon.js CDN -->
+  <script src="https://cdn.babylonjs.com/babylon.js"></script>
+  <script src="https://cdn.babylonjs.com/cannon.js"></script>
+
+  <script>
+    const canvas = document.getElementById("renderCanvas");
+    const engine = new BABYLON.Engine(canvas, true);
+
+    const createScene = () => {
+      const scene = new BABYLON.Scene(engine);
+      scene.enablePhysics(new BABYLON.Vector3(0, -9.81, 0), new BABYLON.CannonJSPlugin());
+
+      // 카메라
+      const camera = new BABYLON.ArcRotateCamera("camera", Math.PI / 4, Math.PI / 4, 150, new BABYLON.Vector3(0, 0, 0), scene);
+      camera.attachControl(canvas, true);
+      camera.lowerRadiusLimit = 50;
+      camera.upperRadiusLimit = 300;
+
+      // 조명
+      const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
+
+      // 바닥
+      const ground = BABYLON.MeshBuilder.CreateGround("ground", { width: 100, height: 100 }, scene);
+      ground.physicsImpostor = new BABYLON.PhysicsImpostor(ground, BABYLON.PhysicsImpostor.BoxImpostor, { mass: 0, restitution: 0.9 }, scene);
+      ground.material = new BABYLON.StandardMaterial("groundMat", scene);
+      ground.material.diffuseColor = new BABYLON.Color3(0.5, 0.5, 0.5);
+
+      // 클릭 시 큐브 생성
+      scene.onPointerDown = function () {
+        const box = BABYLON.MeshBuilder.CreateBox("box", { size: 2 }, scene);
+        box.position = new BABYLON.Vector3(
+          (Math.random() - 0.5) * 80,
+          50,
+          (Math.random() - 0.5) * 80
+        );
+        box.physicsImpostor = new BABYLON.PhysicsImpostor(box, BABYLON.PhysicsImpostor.BoxImpostor, { mass: 1, restitution: 0.3 }, scene);
+        box.material = new BABYLON.StandardMaterial("boxMat", scene);
+        box.material.diffuseColor = BABYLON.Color3.Random();
+      };
+
+      return scene;
+    };
+
+    const scene = createScene();
+    engine.runRenderLoop(() => {
+      scene.render();
+    });
+
+    window.addEventListener("resize", () => {
+      engine.resize();
+    });
+  </script>
+</body>
+</html>
